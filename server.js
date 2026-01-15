@@ -2,9 +2,20 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const authenticateToken = require('./middleware/auth');
+require("dotenv").config();
 
-const data = fs.readFileSync('data/card.json');
-const cards = JSON.parse(data).cards;
+
+app.use(express.urlencoded({ extended: true }));
+
+const cardData = fs.readFileSync('data/card.json');
+const cards = JSON.parse(cardData).cards;
+
+const userData = fs.readFileSync('data/user.json');
+const users = JSON.parse(userData).users;
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 //root
 app.get('/', (req, res) => {
@@ -21,7 +32,8 @@ app.get('/', (req, res) => {
     }
    })
 })
-//CARDS
+
+//ENDPOINTS
 
 //cards
 app.get('/cards', (req, res) => {
@@ -52,6 +64,24 @@ app.get('/cards/random', (req, res) => {
       </form>
     `);
   });
+  
+  app.post('/cards/create', authenticateToken, (req, res) => {
+    const { id, name, type, rarity, set } = req.body;
+
+    const newCard = { id, name, type, rarity, set };
+    cards.push(newCard);
+
+    // Save to card.json file
+    const updatedCardData = { cards: cards };
+    fs.writeFileSync('data/card.json', JSON.stringify(updatedCardData, null, 4));
+
+    res.send(`
+      <h2>Card Created Successfully!</h2>
+      <p><strong>Authenticated User:</strong> ${req.user.username}</p>
+      <pre>${JSON.stringify(newCard, null, 2)}</pre>
+      <a href="/cards">View all cards</a>
+    `);
+  });
 
 // delete
 app.get('/cards/delete/:id', (req, res) => {
@@ -64,7 +94,7 @@ app.get('/cards/update/:id', (req, res) => {
   const { id } = req.params;
   const card = cards.find(card => card.id === id);
   if (!card) {
-    return res.status(404).send(`Card with ID ${id} not found`);
+    return res.status(404).send(`Card with ID: ${id} not found`);
   }
   res.send(`
     <h2>Update Card</h2>
@@ -80,11 +110,56 @@ app.get('/cards/update/:id', (req, res) => {
   `);
 });
 
-//USERS
-
 //auth
+app.get('/auth', (req, res) => {
+  res.send(`
+    <h2>Authenticate</h2>
+    <form method="POST" action="/auth">
+      <input name="username" placeholder="Username" required /><br>
+      <input name="password" type="password" placeholder="Password" required /><br>
+      <button type="submit">Login</button>
+    </form>
+  `);
+});
+app.post("/auth", (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.send("Missing username or password");
+  }
+  
+  const token = jwt.sign(
+    { username: username },
+    JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  const newUser = {
+    id: String(Date.now()),
+    username,
+    password,
+    token
+  };
+
+  users.push(newUser);
+
+  const updatedData = { users: users };
+  fs.writeFileSync('data/user.json', JSON.stringify(updatedData, null, 4));
+
+  res.send(`
+    <h2>Token Generated</h2>
+    <p><strong>Username:</strong> ${username}</p>
+    <p><strong>User saved to database!</strong></p>
+    <textarea rows="6" cols="80">${token}</textarea>
+    <p>Use this token in the Authorization header:</p>
+    <pre>Authorization: Bearer ${token}</pre>
+  `);
+});
 
 //users
+app.get('/users', (req, res) => {
+  res.json(users);
+});
 
 app.listen(port, () => {
   console.log(`Card API listening at http://localhost:${port}`)

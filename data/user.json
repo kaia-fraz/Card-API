@@ -1,0 +1,20 @@
+{
+    "users": [
+        {
+            "id": "1",
+            "username": "user1",
+            "password": "pass1"
+        },
+        {
+            "id": "2",
+            "username": "user2",
+            "password": "pass2"
+        },
+        {
+            "id": "1768513227124",
+            "username": "test",
+            "password": "test",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJpYXQiOjE3Njg1MTMyMjcsImV4cCI6MTc2ODUxNjgyN30.Y4bjBT2hBiq46GFE1KzF56iHZCje_YhOs1_XsBynckY"
+        }
+    ]
+}
