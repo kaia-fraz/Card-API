@@ -1,19 +1,19 @@
+require("dotenv").config();
 const express = require('express');
 const app = express();
 const port = 3000;
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const authenticateToken = require('./middleware/auth');
-require("dotenv").config();
 
 
 app.use(express.urlencoded({ extended: true }));
 
 const cardData = fs.readFileSync('data/card.json');
-const cards = JSON.parse(cardData).cards;
+let cards = JSON.parse(cardData).cards;
 
 const userData = fs.readFileSync('data/user.json');
-const users = JSON.parse(userData).users;
+let users = JSON.parse(userData).users;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -26,14 +26,14 @@ app.get('/', (req, res) => {
       auth: '/auth',
       createCard: "/cards/create",
       updateCard: "/cards/update/:id",
-      deleteCard: "/cards/delete/:id",
+      deleteCard: "/cards/delete/:id/:token",
       cardCount: "/cards/count",
       randomCard: "/cards/random",
     }
    })
 })
 
-//ENDPOINTS
+//CARDS
 
 //cards
 app.get('/cards', (req, res) => {
@@ -68,7 +68,14 @@ app.get('/cards/random', (req, res) => {
   app.post('/cards/create', authenticateToken, (req, res) => {
     const { id, name, type, rarity, set } = req.body;
 
-    const newCard = { id, name, type, rarity, set };
+    // Convert id to number to ensure consistency
+    const newCard = { 
+      id: Number(id), 
+      name, 
+      type, 
+      rarity, 
+      set 
+    };
     cards.push(newCard);
 
     // Save to card.json file
@@ -84,11 +91,34 @@ app.get('/cards/random', (req, res) => {
   });
 
 // delete
-app.get('/cards/delete/:id', (req, res) => {
-  const { id } = req.params;
-  cards = cards.filter(card => card.id !== id);
-  res.send(`Card with ID ${id} deleted`);
+app.get('/cards/delete/:id/:token', (req, res) => {
+  const { id, token } = req.params;
+  const cardId = Number(id);
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).send('Invalid or expired token');
+    }
+
+    const cardIndex = cards.findIndex(
+      card => Number(card.id) === cardId
+    );
+
+    if (cardIndex === -1) {
+      return res.status(404).send(`Card with ID ${id} not found`);
+    }
+
+    cards.splice(cardIndex, 1);
+
+    fs.writeFileSync(
+      'data/card.json',
+      JSON.stringify({ cards }, null, 4)
+    );
+
+    res.send(`Card ${id} deleted by ${user.username}`);
+  });
 });
+
 // update
 app.get('/cards/update/:id', (req, res) => {
   const { id } = req.params;
@@ -109,6 +139,7 @@ app.get('/cards/update/:id', (req, res) => {
     </form>
   `);
 });
+//USERS
 
 //auth
 app.get('/auth', (req, res) => {
@@ -135,7 +166,7 @@ app.post("/auth", (req, res) => {
   );
 
   const newUser = {
-    id: String(Date.now()),
+    id: String(users.length + 1),
     username,
     password,
     token

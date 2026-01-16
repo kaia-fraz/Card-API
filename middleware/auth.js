@@ -4,7 +4,6 @@ require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 function authenticateToken(req, res, next) {
-  // Get token from request body (since it's coming from a form)
   const token = req.body.token;
 
   if (!token) {
@@ -24,8 +23,7 @@ function authenticateToken(req, res, next) {
         <a href="/auth">Get a new token</a>
       `);
     }
-
-    // Token is valid, attach user info to request
+    
     req.user = user;
     next();
   });

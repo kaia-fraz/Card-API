@@ -1291,13 +1291,6 @@
             "toughness": 2500,
             "rarity": "Common",
             "cost": 3
-        },
-        {
-            "id": "1768513227124",
-            "name": "kaia",
-            "type": "human",
-            "rarity": "legendary",
-            "set": "Earth Pack"
         }
     ]
 }
