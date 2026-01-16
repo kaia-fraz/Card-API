@@ -1280,28 +1280,6 @@
             "toughness": 2500,
             "rarity": "Common",
             "cost": 3
-        },
-        {
-            "id": 127,
-            "name": "asdfd Magus",
-            "set": "Base Set",
-            "cardNumber": 1,
-            "type": "Creature",
-            "power": 3000,
-            "toughness": 2500,
-            "rarity": "Common",
-            "cost": 3
-        },
-        {
-            "id": 128,
-            "name": "magnus mtitbo",
-            "set": "climbing",
-            "cardNumber": 1,
-            "type": "beast",
-            "power": 3000,
-            "toughness": 2500,
-            "rarity": "legendary",
-            "cost": 100000
         }
     ]
 }

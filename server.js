@@ -123,7 +123,11 @@ app.get('/cards/delete/:id/:token', (req, res) => {
       JSON.stringify({ cards }, null, 4)
     );
 
-    res.send(`Card ${id} deleted by ${user.username}`);
+    res.send(`
+    <h2>Card Deleted Successfully!</h2>
+    <p>Card ${id} deleted by ${user.username}</p>
+    <a href="/cards">View all cards</a>
+  `);
   });
 });
 
