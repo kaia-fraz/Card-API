@@ -59,22 +59,30 @@ app.get('/cards/random', (req, res) => {
         <input name="name" placeholder="Name" required /><br>
         <input name="type" placeholder="Type" required /><br>
         <input name="rarity" placeholder="Rarity" required /><br>
-        <input name="set" placeholder="Set" required /><br><br>
+        <input name="set" placeholder="Set" required /><br>
+        <input name="cardNumber" placeholder="Card Number" required /><br>
+        <input name="power" placeholder="Power" required /><br>
+        <input name="toughness" placeholder="Toughness" required /><br>
+        <input name="cost" placeholder="Cost" required /><br><br>
         <button type="submit">Create</button>
       </form>
     `);
   });
   
   app.post('/cards/create', authenticateToken, (req, res) => {
-    const { id, name, type, rarity, set } = req.body;
+    const { id, name, type, rarity, set, cardNumber, power, toughness, cost } = req.body;
 
     // Convert id to number to ensure consistency
     const newCard = { 
       id: Number(id), 
-      name, 
-      type, 
-      rarity, 
-      set 
+      name,
+      set,
+      cardNumber: Number(cardNumber),
+      type,
+      power: Number(power),
+      toughness: Number(toughness),
+      rarity,
+      cost: Number(cost)
     };
     cards.push(newCard);
 
@@ -122,7 +130,8 @@ app.get('/cards/delete/:id/:token', (req, res) => {
 // update
 app.get('/cards/update/:id', (req, res) => {
   const { id } = req.params;
-  const card = cards.find(card => card.id === id);
+  const cardId = Number(id);
+  const card = cards.find(card => card.id === cardId);
   if (!card) {
     return res.status(404).send(`Card with ID: ${id} not found`);
   }
@@ -134,11 +143,47 @@ app.get('/cards/update/:id', (req, res) => {
       <input name="name" value="${card.name}" required /><br>
       <input name="type" value="${card.type}" required /><br>
       <input name="rarity" value="${card.rarity}" required /><br>
-      <input name="set" value="${card.set}" required /><br><br>
+      <input name="set" value="${card.set}" required /><br>
+      <input name="cardNumber" value="${card.cardNumber}" required /><br>
+      <input name="power" value="${card.power}" required /><br>
+      <input name="toughness" value="${card.toughness}" required /><br>
+      <input name="cost" value="${card.cost}" required /><br><br>
       <button type="submit">Update</button>
     </form>
   `);
 });
+app.post('/cards/update/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const cardId = Number(id);
+  const { id: newId, name, type, rarity, set, cardNumber, power, toughness, cost } = req.body;
+
+  const cardIndex = cards.findIndex(card => Number(card.id) === cardId);
+  if (cardIndex === -1) {
+    return res.status(404).send(`Card with ID: ${id} not found`);
+  }
+
+  cards[cardIndex] = {
+    id: Number(newId),
+    name,
+    set,
+    cardNumber: Number(cardNumber),
+    type,
+    power: Number(power),
+    toughness: Number(toughness),
+    rarity,
+    cost: Number(cost)
+  };
+
+  fs.writeFileSync('data/card.json', JSON.stringify({ cards }, null, 4));
+
+  res.send(`
+    <h2>Card Updated Successfully!</h2>
+    <p><strong>Authenticated User:</strong> ${req.user.username}</p>
+    <pre>${JSON.stringify(cards[cardIndex], null, 2)}</pre>
+    <a href="/cards">View all cards</a>
+  `);
+});
+
 //USERS
 
 //auth
